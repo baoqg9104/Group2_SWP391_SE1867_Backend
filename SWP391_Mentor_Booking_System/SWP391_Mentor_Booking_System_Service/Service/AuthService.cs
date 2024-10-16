@@ -68,14 +68,14 @@ namespace SWP391_Mentor_Booking_System_Service.Service
                     RegistrationDate = DateTime.Now,
 
                     ApplyStatus =
-                        false // Đặt ApplyStatus là false
+                        false 
                     ,
-                    // Các trường khác để null
+                    
                 };
                 _authRepository.AddMentor(mentor);
             }
 
-            await _authRepository.SaveChangesAsync(); // Đảm bảo gọi phương thức SaveChangesAsync từ repository
+            await _authRepository.SaveChangesAsync(); 
         }
 
         // Phương thức đăng nhập cho Student
@@ -94,7 +94,7 @@ namespace SWP391_Mentor_Booking_System_Service.Service
                 throw new Exception("Mật khẩu không chính xác.");
             }
 
-            // Tạo token mới
+           
             var accessToken = CreateToken(student, "Student");
             var refreshToken = GenerateRefreshToken(student.StudentId);
 
@@ -105,7 +105,7 @@ namespace SWP391_Mentor_Booking_System_Service.Service
                 UserId = student.StudentId,
                 ExpiryDate = DateTime.UtcNow.AddDays(
                     7
-                ) // Thời gian hết hạn 7 ngày
+                ) 
                 ,
             };
             _refreshTokenRepository.AddRefreshToken(refreshTokenEntity);
@@ -167,7 +167,7 @@ namespace SWP391_Mentor_Booking_System_Service.Service
                 throw new Exception("Email không tồn tại.");
             }
 
-            // So sánh mật khẩu trực tiếp (không dùng mã hóa)
+      
             if (loginDto.Password != admin.Password)
             {
                 throw new UnauthorizedAccessException("Mật khẩu không chính xác.");
@@ -183,7 +183,7 @@ namespace SWP391_Mentor_Booking_System_Service.Service
                 UserId = admin.AdminId,
                 ExpiryDate = DateTime.UtcNow.AddDays(
                     7
-                ) // Hết hạn sau 7 ngày
+                ) 
                 ,
             };
             _refreshTokenRepository.AddRefreshToken(refreshTokenEntity);
@@ -208,7 +208,7 @@ namespace SWP391_Mentor_Booking_System_Service.Service
         {
             var claims = new List<Claim>();
 
-            // Kiểm tra các thuộc tính cụ thể của user và thêm vào claims
+        
             if (typeof(T) == typeof(Student))
             {
                 var student = user as Student;
@@ -250,11 +250,11 @@ namespace SWP391_Mentor_Booking_System_Service.Service
 
         private string GenerateRefreshToken(string userId)
         {
-            var refreshToken = Guid.NewGuid().ToString(); // Tạo một GUID làm refresh token
+            var refreshToken = Guid.NewGuid().ToString(); 
             return refreshToken;
         }
 
-        // Thêm phương thức refresh token
+        //refresh token
         public async Task<string> RefreshTokenAsync(string token)
         {
             var refreshToken = await _refreshTokenRepository.GetRefreshTokenByTokenAsync(token); // Lấy refresh token từ DB bằng token
@@ -263,7 +263,7 @@ namespace SWP391_Mentor_Booking_System_Service.Service
                 throw new Exception("Refresh token không hợp lệ.");
             }
 
-            // Ghi log để kiểm tra ExpiryDate
+       
             Console.WriteLine($"ExpiryDate: {refreshToken.ExpiryDate}, CurrentTime: {DateTime.UtcNow}");
 
             if (refreshToken.ExpiryDate < DateTime.UtcNow)
@@ -271,23 +271,61 @@ namespace SWP391_Mentor_Booking_System_Service.Service
                 throw new Exception("Refresh token đã hết hạn.");
             }
 
-            // Lấy thông tin người dùng dựa trên UserId
+   
             var student = await _authRepository.GetStudentByIdAsync(refreshToken.UserId);
             if (student != null)
             {
-                // Tạo access token mới cho Student
+          
                 return CreateToken(student, "Student");
             }
 
             var mentor = await _authRepository.GetMentorByIdAsync(refreshToken.UserId);
             if (mentor != null)
             {
-                // Tạo access token mới cho Mentor
+             
                 return CreateToken(mentor, "Mentor");
             }
 
-            // Nếu không tìm thấy người dùng, ném ra ngoại lệ
+           
             throw new Exception("Người dùng không tồn tại.");
+        }
+
+        public bool IsTokenValid(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+          
+            if (!tokenHandler.CanReadToken(token))
+            {
+                return false; 
+            }
+
+            try
+            {
+                var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+                
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                return true; 
+            }
+            catch (SecurityTokenExpiredException)
+            {
+                
+                return false;
+            }
+            catch (Exception)
+            {
+                
+                return false;
+            }
         }
     }
 }
