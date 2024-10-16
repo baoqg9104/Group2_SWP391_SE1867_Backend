@@ -34,7 +34,7 @@ namespace SWP391_Mentor_Booking_System_API.Controllers
         {
             try
             {
-           
+                // Kiểm tra vai trò của người dùng từ LoginDTO
                 (string accessToken, string refreshToken) tokens;
 
                 if (loginDto.Role.Equals("Student", StringComparison.OrdinalIgnoreCase))
@@ -54,7 +54,7 @@ namespace SWP391_Mentor_Booking_System_API.Controllers
                     return BadRequest("Vai trò không hợp lệ.");
                 }
 
-                
+                // Trả về token sau khi đăng nhập thành công
                 return Ok(new { AccessToken = tokens.accessToken, RefreshToken = tokens.refreshToken });
             }
             catch (Exception ex)
@@ -76,24 +76,7 @@ namespace SWP391_Mentor_Booking_System_API.Controllers
             }
         }
 
-        [HttpGet("validate-token")]
-        public async Task<IActionResult> ValidateToken([FromHeader] string token)
-        {
-            if (string.IsNullOrEmpty(token))
-            {
-                return BadRequest("Token không được để trống.");
-            }
 
-            var isValid = _authService.IsTokenValid(token);
-            if (isValid)
-            {
-                return Ok("Token hợp lệ.");
-            }
-            else
-            {
-                return Unauthorized("Token không hợp lệ."); // Trả về lỗi nếu token không hợp lệ
-            }
-        }
 
     }
 }

@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SWP391_Mentor_Booking_System_Data.Data;
 using SWP391_Mentor_Booking_System_Service.Service;
 
 namespace SWP391_Mentor_Booking_System_API.Controllers
@@ -17,7 +15,6 @@ namespace SWP391_Mentor_Booking_System_API.Controllers
             _studentService = studentService;
         }
 
-        
         [HttpGet("all")]
         public async Task<IActionResult> GetAllStudents()
         {
